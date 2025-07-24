@@ -3715,6 +3715,8 @@ class Risk_Acceptance(models.Model):
                             blank=True, verbose_name=_("Proof"))
     owner = models.ForeignKey(Dojo_User, editable=True, on_delete=models.RESTRICT, help_text=_("User in DefectDojo owning this acceptance. Only the owner and staff users can edit the risk acceptance."))
 
+    approved = models.BooleanField(default=False, help_text=_("Whether this risk acceptance has been approved by the owner."))
+
     expiration_date = models.DateTimeField(default=None, null=True, blank=True, help_text=_("When the risk acceptance expires, the findings will be reactivated (unless disabled below)."))
     expiration_date_warned = models.DateTimeField(default=None, null=True, blank=True, help_text=_("(readonly) Date at which notice about the risk acceptance expiration was sent."))
     expiration_date_handled = models.DateTimeField(default=None, null=True, blank=True, help_text=_("(readonly) When the risk acceptance expiration was handled (manually or by the daily job)."))

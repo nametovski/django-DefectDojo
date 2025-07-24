@@ -21,6 +21,7 @@ from django.db.models.functions import Coalesce
 from django.db.models.query import Prefetch, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
 from django.urls import Resolver404, reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -1236,7 +1237,7 @@ def add_risk_acceptance(request, eid, fid=None):
 
             findings = form.cleaned_data["accepted_findings"]
 
-            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings)
+            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
 
             messages.add_message(
                 request,
@@ -1380,7 +1381,7 @@ def view_edit_risk_acceptance(request, eid, raid, *, edit_mode=False):
             if not errors:
                 findings = add_findings_form.cleaned_data["accepted_findings"]
 
-                ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings)
+                ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=risk_acceptance.approved)
 
                 messages.add_message(
                     request,
@@ -1459,6 +1460,31 @@ def reinstate_risk_acceptance(request, eid, raid):
     ra_helper.reinstate(risk_acceptance, risk_acceptance.expiration_date)
 
     return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
+
+
+@user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")
+def approve_risk_acceptance(request, eid, raid):
+    risk_acceptance = get_object_or_404(Risk_Acceptance, pk=raid)
+    eng = get_object_or_404(Engagement, pk=eid)
+    if request.user != risk_acceptance.owner:
+        raise PermissionDenied
+    if not risk_acceptance.approved:
+        ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, risk_acceptance.accepted_findings.all(), apply=True)
+        risk_acceptance.approved = True
+        risk_acceptance.save()
+        messages.add_message(
+            request,
+            messages.SUCCESS,
+            "Risk acceptance approved.",
+            extra_tags="alert-success",
+        )
+    return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
+
+
+@login_required
+def pending_risk_acceptances(request):
+    ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
+    return render(request, "dojo/pending_risk_acceptances.html", {"risk_acceptances": ras})
 
 
 @user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")

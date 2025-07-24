@@ -8,6 +8,13 @@
         </a>
     </li>
 {% endif %}
+{% if not risk_acceptance.approved and risk_acceptance.owner == request.user %}
+    <li role="presentation">
+        <a href="{% url 'approve_risk_acceptance' engagement.id risk_acceptance.id %}?return_url={{ request.get_full_path|urlencode }}">
+            <i class="fa-solid fa-check"></i> Approve
+        </a>
+    </li>
+{% endif %}
 
 {% if engagement.product.enable_full_risk_acceptance %}
     {% if engagement|has_object_permission:"Risk_Acceptance" %}
