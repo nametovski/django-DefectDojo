@@ -124,14 +124,21 @@ def remove_finding_from_risk_acceptance(user: Dojo_User, risk_acceptance: Risk_A
     return
 
 
-def add_findings_to_risk_acceptance(user: Dojo_User, risk_acceptance: Risk_Acceptance, findings: list[Finding]) -> None:
+def add_findings_to_risk_acceptance(
+    user: Dojo_User,
+    risk_acceptance: Risk_Acceptance,
+    findings: list[Finding],
+    *,
+    apply: bool = True,
+) -> None:
     for finding in findings:
         if not finding.duplicate or finding.risk_accepted:
-            finding.active = False
-            finding.risk_accepted = True
-            finding.save(dedupe_option=False)
-            # Update any endpoint statuses on each of the findings
-            update_endpoint_statuses(finding, accept_risk=True)
+            if apply:
+                finding.active = False
+                finding.risk_accepted = True
+                finding.save(dedupe_option=False)
+                # Update any endpoint statuses on each of the findings
+                update_endpoint_statuses(finding, accept_risk=True)
             risk_acceptance.accepted_findings.add(finding)
         # Add a note to reflect that the finding was removed from the risk acceptance
         if user is not None:
