@@ -400,6 +400,7 @@
                                             <th>Findings</th>
                                             <th>Proof</th>
                                             <th>Owner</th>
+                                            <th>Status</th>
                                             {% endblock risk_acceptance_header %}
                                         </tr>
                                     </thead>
@@ -447,6 +448,7 @@
                                                     <td>No</a></td>
                                                 {% endif %}
                                                 <td>{{ risk_acceptance.owner.get_full_name }}</td>
+                                                <td>{% if risk_acceptance.approved %}Approved{% else %}Pending{% endif %}</td>
                                                 {% endblock risk_acceptances %}
                                             </tr>
                                         {% endfor %}

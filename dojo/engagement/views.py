@@ -13,6 +13,7 @@ from time import strftime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.utils import NestedObjects
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DEFAULT_DB_ALIAS
@@ -52,6 +53,7 @@ from dojo.finding.helper import NOT_ACCEPTED_FINDINGS_QUERY
 from dojo.finding.views import find_available_notetypes
 from dojo.forms import (
     AddFindingsRiskAcceptanceForm,
+    ApproveRiskAcceptanceForm,
     CheckForm,
     CredMappingForm,
     DeleteEngagementForm,
@@ -1236,7 +1238,7 @@ def add_risk_acceptance(request, eid, fid=None):
 
             findings = form.cleaned_data["accepted_findings"]
 
-            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings)
+            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
 
             messages.add_message(
                 request,
@@ -1380,7 +1382,7 @@ def view_edit_risk_acceptance(request, eid, raid, *, edit_mode=False):
             if not errors:
                 findings = add_findings_form.cleaned_data["accepted_findings"]
 
-                ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings)
+                ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=risk_acceptance.approved)
 
                 messages.add_message(
                     request,
@@ -1459,6 +1461,50 @@ def reinstate_risk_acceptance(request, eid, raid):
     ra_helper.reinstate(risk_acceptance, risk_acceptance.expiration_date)
 
     return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
+
+
+@user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")
+def approve_risk_acceptance(request, eid, raid):
+    risk_acceptance = get_object_or_404(Risk_Acceptance, pk=raid)
+    eng = get_object_or_404(Engagement, pk=eid)
+    if request.user != risk_acceptance.owner:
+        raise PermissionDenied
+
+    if request.method == "POST":
+        form = ApproveRiskAcceptanceForm(request.POST, instance=risk_acceptance)
+        if form.is_valid() and not risk_acceptance.approved:
+            form.save()
+            ra_helper.add_findings_to_risk_acceptance(
+                request.user,
+                risk_acceptance,
+                risk_acceptance.accepted_findings.all(),
+                apply=True,
+            )
+            risk_acceptance.approved = True
+            risk_acceptance.save()
+            messages.add_message(
+                request,
+                messages.SUCCESS,
+                "Risk acceptance approved.",
+                extra_tags="alert-success",
+            )
+            return redirect_to_return_url_or_else(
+                request, reverse("view_risk_acceptance", args=(eid, raid)),
+            )
+    else:
+        form = ApproveRiskAcceptanceForm(instance=risk_acceptance)
+
+    return render(
+        request,
+        "dojo/approve_risk_acceptance.html",
+        {"form": form, "engagement": eng, "risk_acceptance": risk_acceptance},
+    )
+
+
+@login_required
+def pending_risk_acceptances(request):
+    ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
+    return render(request, "dojo/pending_risk_acceptances.html", {"risk_acceptances": ras})
 
 
 @user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")

@@ -838,6 +838,7 @@ class EditRiskAcceptanceForm(forms.ModelForm):
 
     path = forms.FileField(label="Proof", required=False, widget=forms.widgets.FileInput(attrs={"accept": ".jpg,.png,.pdf"}))
     expiration_date = forms.DateTimeField(required=False, widget=forms.TextInput(attrs={"class": "datepicker"}))
+    approved = forms.BooleanField(required=False, label="Approved")
 
     class Meta:
         model = Risk_Acceptance
@@ -860,6 +861,7 @@ class RiskAcceptanceForm(EditRiskAcceptanceForm):
     notes = forms.CharField(required=False, max_length=2400,
                             widget=forms.Textarea,
                             label="Notes")
+    approved = forms.BooleanField(required=False, widget=forms.HiddenInput(), initial=False)
 
     class Meta:
         model = Risk_Acceptance
@@ -932,6 +934,12 @@ class AddFindingsRiskAcceptanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["accepted_findings"].queryset = get_authorized_findings(Permissions.Risk_Acceptance)
+
+
+class ApproveRiskAcceptanceForm(forms.ModelForm):
+    class Meta:
+        model = Risk_Acceptance
+        fields = ["recommendation", "recommendation_details", "expiration_date"]
 
 
 class CheckForm(forms.ModelForm):

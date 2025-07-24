@@ -68,6 +68,9 @@
                         </ul>
                     </div>
                 </div>
+                {% if not risk_acceptance.approved %}
+                    <div class="alert alert-warning">Pending approval</div>
+                {% endif %}
             </div>
             <div class="table-responsive">
                 <table class="table-striped table table-condensed table-hover centered">
