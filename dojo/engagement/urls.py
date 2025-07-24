@@ -44,6 +44,8 @@ urlpatterns = [
         views.expire_risk_acceptance, name="expire_risk_acceptance"),
     re_path(r"^engagement/(?P<eid>\d+)/risk_acceptance/(?P<raid>\d+)/reinstate$",
         views.reinstate_risk_acceptance, name="reinstate_risk_acceptance"),
+    re_path(r"^engagement/(?P<eid>\d+)/risk_acceptance/(?P<raid>\d+)/approve$",
+        views.approve_risk_acceptance, name="approve_risk_acceptance"),
     re_path(r"^engagement/(?P<eid>\d+)/risk_acceptance/(?P<raid>\d+)/delete$",
         views.delete_risk_acceptance, name="delete_risk_acceptance"),
     re_path(r"^engagement/(?P<eid>\d+)/risk_acceptance/(?P<raid>\d+)/download$",
@@ -56,4 +58,6 @@ urlpatterns = [
         views.csv_export, name="engagement_csv_export"),
     re_path(r"^engagement/excel_export$",
         views.excel_export, name="engagement_excel_export"),
+    re_path(r"^risk_acceptance/requests$",
+        views.pending_risk_acceptances, name="pending_risk_acceptances"),
 ]

@@ -328,6 +328,11 @@
                                                         {% trans "Risk Accepted Findings" %}
                                                     </a>
                                                 </li>
+                                                <li>
+                                                    <a href="{% url 'pending_risk_acceptances' %}">
+                                                        {% trans "Risk Acceptance Requests" %}
+                                                    </a>
+                                                </li>
                                                 {% if "Finding_View"|has_global_permission %}
                                                     <li>
                                                         <a href="{% url 'templates' %}">
