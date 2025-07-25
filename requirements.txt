@@ -77,3 +77,5 @@ PyYAML==6.0.2
 pyopenssl==25.1.0
 parameterized==0.9.0
 watchdog==6.0.0 # only needed for development, but would require some docker refactoring if we want to exclude it for production images
+mcp==1.12.2
+httpx==0.27.0
