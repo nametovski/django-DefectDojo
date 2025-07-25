@@ -1065,3 +1065,11 @@ def import_history(finding, *, autoescape=True):
         list_of_status_changes += "<b>" + status_change.created.strftime("%b %d, %Y, %H:%M:%S") + "</b>: " + status_change.get_action_display() + "<br/>"
 
     return mark_safe(html % (list_of_status_changes))
+
+
+@register.filter
+def is_member_of_group(user, group_name):
+    """Return True if the user belongs to the given Dojo group."""
+    if not user or not group_name:
+        return False
+    return user.dojo_group_member_set.filter(group__name=group_name).exists()

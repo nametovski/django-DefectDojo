@@ -1478,8 +1478,9 @@ def reinstate_risk_acceptance(request, eid, raid):
     return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
 
 
-@user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")
+@login_required
 def approve_risk_acceptance(request, eid, raid):
+    """Allow members of the ``Risk-Approvers`` Dojo group to approve requests."""
     risk_acceptance = get_object_or_404(Risk_Acceptance, pk=raid)
     eng = get_object_or_404(Engagement, pk=eid)
 
@@ -1512,7 +1513,11 @@ def approve_risk_acceptance(request, eid, raid):
 
 @login_required
 def pending_risk_acceptances(request):
-    ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
+    """List risk acceptances awaiting approval."""
+    if Dojo_Group_Member.objects.filter(group__name="Risk-Approvers", user=request.user).exists():
+        ras = Risk_Acceptance.objects.filter(approved=False).select_related("engagement")
+    else:
+        ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
     return render(request, "dojo/pending_risk_acceptances.html", {"risk_acceptances": ras})
 
 
