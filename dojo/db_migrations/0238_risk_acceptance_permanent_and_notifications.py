@@ -32,4 +32,3 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(create_risk_approvers, migrations.RunPython.noop),
     ]
-    
