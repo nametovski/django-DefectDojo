@@ -69,7 +69,10 @@
                     </div>
                 </div>
                 {% if not risk_acceptance.approved %}
-                    <div class="alert alert-warning">Pending approval</div>
+                    <div class="alert alert-warning mt-2 d-flex align-items-center">
+                        <i class="fa-solid fa-hourglass-half fa-fw mr-1"></i>
+                        <span>Pending approval</span>
+                    </div>
                 {% endif %}
             </div>
             <div class="table-responsive">
