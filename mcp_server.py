@@ -20,7 +20,6 @@ class InitResponse(BaseModel):
     version: str
     endpoints: list[str]
 
-
 class FindingOut(BaseModel):
     id: int
     title: str
@@ -54,7 +53,6 @@ def initialize():
             "/critical-sla",
         ],
     )
-
 
 @app.get("/findings", response_model=list[FindingOut])
 def list_findings(request: Request):
@@ -100,3 +98,4 @@ def critical_sla():
         )
         for f in qs
     ]
+
