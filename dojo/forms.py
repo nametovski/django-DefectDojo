@@ -839,6 +839,7 @@ class EditRiskAcceptanceForm(forms.ModelForm):
     path = forms.FileField(label="Proof", required=False, widget=forms.widgets.FileInput(attrs={"accept": ".jpg,.png,.pdf"}))
     expiration_date = forms.DateTimeField(required=False, widget=forms.TextInput(attrs={"class": "datepicker"}))
     approved = forms.BooleanField(required=False, label="Approved")
+    permanent = forms.BooleanField(required=False, label="Permanent")
 
     class Meta:
         model = Risk_Acceptance
@@ -862,6 +863,7 @@ class RiskAcceptanceForm(EditRiskAcceptanceForm):
                             widget=forms.Textarea,
                             label="Notes")
     approved = forms.BooleanField(required=False, widget=forms.HiddenInput(), initial=False)
+    permanent = forms.BooleanField(required=False, label="Permanent")
 
     class Meta:
         model = Risk_Acceptance
@@ -934,6 +936,16 @@ class AddFindingsRiskAcceptanceForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["accepted_findings"].queryset = get_authorized_findings(Permissions.Risk_Acceptance)
+
+
+class ApproveRiskAcceptanceForm(forms.ModelForm):
+    decision = forms.ChoiceField(choices=Risk_Acceptance.TREATMENT_CHOICES, widget=forms.RadioSelect)
+    decision_details = forms.CharField(required=False, widget=forms.Textarea, label="Decision Details")
+    permanent = forms.BooleanField(required=False, label="Permanent")
+
+    class Meta:
+        model = Risk_Acceptance
+        fields = ["decision", "decision_details", "permanent"]
 
 
 class CheckForm(forms.ModelForm):
@@ -2930,10 +2942,11 @@ class ProductNotificationsForm(forms.ModelForm):
             self.initial["sla_breach"] = ""
             self.initial["sla_breach_combined"] = ""
             self.initial["risk_acceptance_expiration"] = ""
+            self.initial["risk_acceptance_request"] = ""
 
     class Meta:
         model = Notifications
-        fields = ["engagement_added", "close_engagement", "test_added", "scan_added", "sla_breach", "sla_breach_combined", "risk_acceptance_expiration"]
+        fields = ["engagement_added", "close_engagement", "test_added", "scan_added", "sla_breach", "sla_breach_combined", "risk_acceptance_expiration", "risk_acceptance_request"]
 
 
 class AjaxChoiceField(forms.ChoiceField):
