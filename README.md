@@ -100,7 +100,9 @@ DefectDojo ships with a small MCP server that communicates directly with the API
 python dojo_mcp.py
 ```
 
-The server exposes tools to query products, engagements and findings and to update finding status. It is also
+The server exposes tools to query products, engagements and findings and to update finding status. It can also
+create engagements, tests and findings. Findings may be enriched with EPSS and KEV data from public sources.
+The service is also
 included as the `mcp` service in `docker-compose.yml`, listening on port `8010`.
 Authentication is handled automatically when `DEFECTDOJO_API_USER` and `DEFECTDOJO_API_PASSWORD` are provided.
 Alternatively set `DEFECTDOJO_API_TOKEN` with a valid API token.

@@ -47,6 +47,22 @@ def _api_get(path: str, params: dict[str, Any] | None = None) -> Any:
     return data.get("results", data)
 
 
+def _api_post(path: str, payload: dict[str, Any]) -> dict:
+    """POST data to the DefectDojo API and return the created object."""
+    url = f"{API_URL.rstrip('/')}/{path.lstrip('/')}"
+    response = _session.post(url, json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def _api_patch(path: str, payload: dict[str, Any]) -> dict:
+    """PATCH data to the DefectDojo API and return the updated object."""
+    url = f"{API_URL.rstrip('/')}/{path.lstrip('/')}"
+    response = _session.patch(url, json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
 @mcp.tool()
 def list_products() -> list[dict]:
     """Return all products."""
@@ -98,16 +114,91 @@ def critical_sla() -> list[dict]:
 @mcp.tool()
 def update_finding_status(finding_id: int, **fields: Any) -> dict:
     """Update fields on a finding."""
-    url = f"{API_URL.rstrip('/')}/findings/{finding_id}/"
-    response = _session.patch(url, json=fields)
-    response.raise_for_status()
-    return response.json()
+    return _api_patch(f"findings/{finding_id}/", fields)
 
 
 @mcp.tool()
 def benchmark_results(product_id: int) -> list[dict]:
     """Return benchmark requirements for a product."""
     return _api_get(f"benchmarks/{product_id}/")
+
+
+@mcp.tool()
+def create_engagement(name: str, product_id: int, **fields: Any) -> dict:
+    """Create a new engagement under the given product."""
+    payload = {"name": name, "product": product_id}
+    payload.update(fields)
+    return _api_post("engagements/", payload)
+
+
+@mcp.tool()
+def list_tests(engagement_id: int) -> list[dict]:
+    """List tests for an engagement."""
+    return _api_get("tests/", {"engagement": engagement_id})
+
+
+@mcp.tool()
+def create_test(engagement_id: int, test_type: int, **fields: Any) -> dict:
+    """Create a test in an engagement."""
+    payload = {"engagement": engagement_id, "test_type": test_type}
+    payload.update(fields)
+    return _api_post("tests/", payload)
+
+
+@mcp.tool()
+def create_finding(test_id: int, title: str, severity: str, **fields: Any) -> dict:
+    """Create a finding under a test."""
+    payload = {"test": test_id, "title": title, "severity": severity}
+    payload.update(fields)
+    return _api_post("findings/", payload)
+
+
+def _epss_lookup(cve: str) -> dict | None:
+    url = "https://api.first.org/data/v1/epss"
+    resp = httpx.get(url, params={"cve": cve}, timeout=30)
+    if resp.status_code == 200:
+        data = resp.json().get("data")
+        return data[0] if data else None
+    return None
+
+
+def _kev_lookup(cve: str) -> dict | None:
+    url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+    resp = httpx.get(url, timeout=30)
+    if resp.status_code == 200:
+        items = resp.json().get("vulnerabilities", [])
+        for item in items:
+            if item.get("cveID") == cve:
+                return item
+    return None
+
+
+@mcp.tool()
+def epss_score(cve: str) -> dict | None:
+    """Return EPSS data for a CVE."""
+    return _epss_lookup(cve)
+
+
+@mcp.tool()
+def kev_entry(cve: str) -> dict | None:
+    """Return KEV catalog entry for a CVE if present."""
+    return _kev_lookup(cve)
+
+
+@mcp.tool()
+def enrich_finding_epss(finding_id: int) -> dict | None:
+    """Get EPSS data for a finding's CVE."""
+    finding = _api_get(f"findings/{finding_id}/")
+    cve = finding.get("cve")
+    return _epss_lookup(cve) if cve else None
+
+
+@mcp.tool()
+def enrich_finding_kev(finding_id: int) -> dict | None:
+    """Get KEV entry for a finding's CVE."""
+    finding = _api_get(f"findings/{finding_id}/")
+    cve = finding.get("cve")
+    return _kev_lookup(cve) if cve else None
 
 
 if __name__ == "__main__":
