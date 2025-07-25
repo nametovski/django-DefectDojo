@@ -92,6 +92,32 @@ Navigate to `http://localhost:8080` to see your new instance!
 
 * [Docker / Docker Compose](readme-docs/DOCKER.md)
 * [SaaS](https://www.defectdojo.com/) - Includes Support & Supports the Project
+## MCP Server
+
+DefectDojo ships with a small MCP server to allow Copilot agents to query data. Start it with:
+
+```bash
+uvicorn mcp_server:app
+```
+
+Available endpoints:
+- `/findings` uses DefectDojo's filters. Example: `/findings?severity=High&active=True`.
+- `/findings/{severity}` list findings filtered by severity.
+- `/risk-accepted` list items that are risk accepted.
+- `/critical-sla` list SLA information for critical findings.
+
+### Using Copilot Agent in VS Code
+
+1. Install the **GitHub Copilot Chat** extension.
+2. Add a workspace setting `.vscode/settings.json`:
+   ```json
+   {
+       "github.copilot.agent.custom": {
+           "dojo": "http://localhost:8000"
+       }
+   }
+   ```
+3. Start the MCP server with `uvicorn mcp_server:app` and use `@dojo` in Copilot Chat to query findings.
 
 ## Community, Getting Involved, and Updates
 
