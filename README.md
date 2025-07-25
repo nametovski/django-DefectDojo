@@ -100,7 +100,9 @@ DefectDojo ships with a small MCP server that communicates directly with the API
 python dojo_mcp.py
 ```
 
-The server exposes tools to query products, engagements and findings and to update finding status.
+The server exposes tools to query products, engagements and findings and to update finding status. It is also
+included as the `mcp` service in `docker-compose.yml`, listening on port `8010`.
+Set `DEFECTDOJO_API_TOKEN` if authentication is required.
 
 
 ### Using Copilot Agent in VS Code
@@ -116,7 +118,6 @@ The server exposes tools to query products, engagements and findings and to upda
    ```
 3. Launch the MCP server with `python dojo_mcp.py`.
 4. Copilot sends a JSON-RPC `initialize` request to the MCP server when connecting. Ensure the service is running and reachable.
-
 
 ## Community, Getting Involved, and Updates
 
