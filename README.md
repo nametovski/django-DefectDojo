@@ -92,6 +92,29 @@ Navigate to `http://localhost:8080` to see your new instance!
 
 * [Docker / Docker Compose](readme-docs/DOCKER.md)
 * [SaaS](https://www.defectdojo.com/) - Includes Support & Supports the Project
+## MCP Server
+
+DefectDojo ships with a small MCP server that communicates directly with the API. Start it with:
+
+```bash
+python dojo_mcp.py
+```
+
+The server exposes tools to query products, engagements and findings and to update finding status.
+
+### Using Copilot Agent in VS Code
+
+1. Install the **GitHub Copilot Chat** extension.
+2. Add a workspace setting `.vscode/settings.json`:
+   ```json
+   {
+       "github.copilot.agent.custom": {
+           "dojo": "http://localhost:8010/mcp"
+       }
+   }
+   ```
+3. Launch the MCP server with `python dojo_mcp.py`.
+4. Copilot sends a JSON-RPC `initialize` request to the MCP server when connecting. Ensure the service is running and reachable.
 
 ## Community, Getting Involved, and Updates
 

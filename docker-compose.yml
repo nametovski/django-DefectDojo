@@ -99,6 +99,19 @@ services:
           source: ./docker/extra_settings
           target: /app/docker/extra_settings
         - "defectdojo_media:${DD_MEDIA_ROOT:-/app/media}"
+  mcp:
+    image: "defectdojo/defectdojo-django:${DJANGO_VERSION:-latest}"
+    depends_on:
+      uwsgi:
+        condition: service_started
+    command: ["python", "dojo_mcp.py"]
+    environment:
+      DEFECTDOJO_API_URL: "http://uwsgi:8081/api/v2"
+    ports:
+      - target: 8010
+        published: 8010
+        protocol: tcp
+        mode: host
   initializer:
     image: "defectdojo/defectdojo-django:${DJANGO_VERSION:-latest}"
     depends_on:
