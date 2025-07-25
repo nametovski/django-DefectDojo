@@ -68,10 +68,15 @@
                         </ul>
                     </div>
                 </div>
-                {% if not risk_acceptance.approved %}
-                    <div class="alert alert-warning">Pending approval</div>
-                {% endif %}
             </div>
+            {% if not risk_acceptance.approved %}
+                <div class="pending-approval panel panel-warning mb-2">
+                    <div class="panel-heading d-flex align-items-center">
+                        <i class="fa-solid fa-hourglass-half fa-fw mr-1"></i>
+                        <h4 class="m-0">Pending approval</h4>
+                    </div>
+                </div>
+            {% endif %}
             <div class="table-responsive">
                 <table class="table-striped table table-condensed table-hover centered">
                     <tr>
