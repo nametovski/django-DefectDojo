@@ -1515,9 +1515,10 @@ def approve_risk_acceptance(request, eid, raid):
 def pending_risk_acceptances(request):
     """List risk acceptances awaiting approval."""
     if Dojo_Group_Member.objects.filter(group__name="Risk-Approvers", user=request.user).exists():
-        ras = Risk_Acceptance.objects.filter(approved=False).select_related("engagement")
+        ras = Risk_Acceptance.objects.filter(approved=False)
     else:
         ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
+    ras = ras.prefetch_related("engagement_set")
     return render(request, "dojo/pending_risk_acceptances.html", {"risk_acceptances": ras})
 
 
