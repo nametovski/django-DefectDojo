@@ -102,6 +102,7 @@ python dojo_mcp.py
 
 The server exposes tools to query products, engagements and findings and to update finding status.
 
+
 ### Using Copilot Agent in VS Code
 
 1. Install the **GitHub Copilot Chat** extension.
@@ -115,6 +116,7 @@ The server exposes tools to query products, engagements and findings and to upda
    ```
 3. Launch the MCP server with `python dojo_mcp.py`.
 4. Copilot sends a JSON-RPC `initialize` request to the MCP server when connecting. Ensure the service is running and reachable.
+
 
 ## Community, Getting Involved, and Updates
 

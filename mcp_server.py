@@ -20,7 +20,6 @@ class InitResponse(BaseModel):
     version: str
     endpoints: list[str]
 
-
 class FindingOut(BaseModel):
     id: int
     title: str
@@ -70,7 +69,6 @@ def _initialize_response() -> InitResponse:
 def initialize():
     """Return basic metadata so Copilot can connect."""
     return _initialize_response()
-
 
 @app.get("/findings", response_model=list[FindingOut])
 def list_findings(request: Request):

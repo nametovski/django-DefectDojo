@@ -96,6 +96,5 @@ def benchmark_results(product_id: int) -> list[dict]:
     """Return benchmark requirements for a product."""
     return _api_get(f"benchmarks/{product_id}/")
 
-
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")
