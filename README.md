@@ -104,6 +104,7 @@ The server exposes tools to query products, engagements and findings and to upda
 included as the `mcp` service in `docker-compose.yml`, listening on port `8010`.
 Set `DEFECTDOJO_API_TOKEN` if authentication is required.
 
+
 ### Using Copilot Agent in VS Code
 
 1. Install the **GitHub Copilot Chat** extension.
