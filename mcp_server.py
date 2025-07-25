@@ -39,9 +39,19 @@ def root():
     return {"status": "ok"}
 
 
-@app.post("/initialize", response_model=InitResponse)
-def initialize():
-    """Return basic metadata so Copilot can connect."""
+@app.post("/", response_model=InitResponse)
+async def root_initialize(request: Request):
+    """Handle JSON-RPC initialize calls posted to root."""
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    if payload.get("method") != "initialize":
+        raise HTTPException(status_code=400, detail="Unsupported method")
+    return _initialize_response()
+
+
+def _initialize_response() -> InitResponse:
     return InitResponse(
         name="DefectDojo MCP",
         description="Query findings from DefectDojo",
@@ -53,6 +63,12 @@ def initialize():
             "/critical-sla",
         ],
     )
+
+
+@app.post("/initialize", response_model=InitResponse)
+def initialize():
+    """Return basic metadata so Copilot can connect."""
+    return _initialize_response()
 
 @app.get("/findings", response_model=list[FindingOut])
 def list_findings(request: Request):
@@ -98,4 +114,3 @@ def critical_sla():
         )
         for f in qs
     ]
-

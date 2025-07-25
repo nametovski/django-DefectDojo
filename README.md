@@ -94,17 +94,21 @@ Navigate to `http://localhost:8080` to see your new instance!
 * [SaaS](https://www.defectdojo.com/) - Includes Support & Supports the Project
 ## MCP Server
 
-DefectDojo ships with a small MCP server to allow Copilot agents to query data. Start it with:
+DefectDojo ships with a small MCP server to allow Copilot agents to query data. Start the REST server with:
 
 ```bash
-
 uvicorn mcp_server:app --host 0.0.0.0 --port 8000
 ```
 
-Available endpoints:
-- `/` simple health check.
-- `/initialize` used by Copilot to handshake with the MCP server.
+For full MCP protocol support run the FastMCP entry point as well:
 
+```bash
+python dojo_mcp.py
+```
+
+Available endpoints:
+- `/` simple health check (GET) and initialization (POST).
+- `/initialize` explicit initialization endpoint.
 - `/findings` uses DefectDojo's filters. Example: `/findings?severity=High&active=True`.
 - `/findings/{severity}` list findings filtered by severity.
 - `/risk-accepted` list items that are risk accepted.
@@ -117,14 +121,12 @@ Available endpoints:
    ```json
    {
        "github.copilot.agent.custom": {
-           "dojo": "http://localhost:8000"
+           "dojo": "http://localhost:8010/mcp"
        }
    }
    ```
-
-3. Start the MCP server with `uvicorn mcp_server:app --host 0.0.0.0 --port 8000` and use `@dojo` in Copilot Chat to query findings.
-4. The Copilot agent will POST to `/initialize` when connecting. Ensure the endpoint is reachable.
-
+3. Start the REST API with `uvicorn mcp_server:app --host 0.0.0.0 --port 8000` and launch the MCP server via `python dojo_mcp.py`.
+4. Copilot sends a JSON-RPC `initialize` request to the MCP server when connecting. Ensure both servers are running and reachable.
 
 ## Community, Getting Involved, and Updates
 
