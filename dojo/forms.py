@@ -851,6 +851,15 @@ class EditRiskAcceptanceForm(forms.ModelForm):
         self.fields["expiration_date_warned"].disabled = True
         self.fields["expiration_date_handled"].disabled = True
 
+    def save(self, *, commit: bool = True):
+        ra = super().save(commit=False)
+        if ra.permanent:
+            ra.expiration_date = None
+        if commit:
+            ra.save()
+            self.save_m2m()
+        return ra
+
 
 class RiskAcceptanceForm(EditRiskAcceptanceForm):
     # path = forms.FileField(label="Proof", required=False, widget=forms.widgets.FileInput(attrs={"accept": ".jpg,.png,.pdf"}))
@@ -946,6 +955,15 @@ class ApproveRiskAcceptanceForm(forms.ModelForm):
     class Meta:
         model = Risk_Acceptance
         fields = ["decision", "decision_details", "permanent"]
+
+    def save(self, *, commit: bool = True):
+        ra = super().save(commit=False)
+        if ra.permanent:
+            ra.expiration_date = None
+        if commit:
+            ra.save()
+            self.save_m2m()
+        return ra
 
 
 class CheckForm(forms.ModelForm):

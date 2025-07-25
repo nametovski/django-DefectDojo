@@ -300,11 +300,13 @@ def get_almost_expired_risk_acceptances_to_handle(heads_up_days):
 
 
 def prefetch_for_expiration(risk_acceptances):
-    return risk_acceptances.prefetch_related("accepted_findings", "accepted_findings__jira_issue",
-                                                "engagement_set",
-                                                "engagement__jira_project",
-                                                "engagement__jira_project__jira_instance",
-                                             )
+    return risk_acceptances.prefetch_related(
+        "accepted_findings",
+        "accepted_findings__jira_issue",
+        "engagement_set",
+        "engagement_set__jira_project",
+        "engagement_set__jira_project__jira_instance",
+    )
 
 
 def simple_risk_accept(user: Dojo_User, finding: Finding, *, perform_save=True) -> None:
