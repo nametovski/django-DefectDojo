@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load display_tags %}
+{% block content %}
+<h3>Review &amp; Approve Risk Acceptance</h3>
+
+<p>
+    <strong>Expiration:</strong>
+    {% if risk_acceptance.permanent or not risk_acceptance.expiration_date %}
+        Never
+    {% else %}
+        {{ risk_acceptance.expiration_date|date }}
+    {% endif %}
+</p>
+
+<h4>Findings</h4>
+<table class="table table-condensed table-striped">
+    <thead>
+    <tr>
+        <th>Severity</th>
+        <th>Name</th>
+        <th>Date</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for finding in risk_acceptance.accepted_findings.all %}
+    <tr>
+        <td>
+            <span class="label severity severity-{{ finding.severity }}">
+                {{ finding.severity_display }}
+            </span>
+        </td>
+        <td><a href="{% url 'view_finding' finding.id %}">{{ finding.title|truncatechars_html:80 }}</a></td>
+        <td>{{ finding.date }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<form method="post" class="form-horizontal">
+    {% csrf_token %}
+    {% include 'dojo/form_fields.html' with form=form %}
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <input class="btn btn-primary" type="submit" value="Submit"/>
+        </div>
+    </div>
+</form>
+{% endblock %}
+

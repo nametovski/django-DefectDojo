@@ -415,8 +415,7 @@ else:
     }
 
 # Track migrations through source control rather than making migrations locally
-if env("DD_TRACK_MIGRATIONS"):
-    MIGRATION_MODULES = {"dojo": "dojo.db_migrations"}
+MIGRATION_MODULES = {"dojo": "dojo.db_migrations"}
 
 # Default for automatically created id fields,
 # see https://docs.djangoproject.com/en/3.2/releases/3.2/#customizing-type-of-auto-created-primary-keys
