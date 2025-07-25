@@ -1,17 +1,24 @@
 import os
+
 import django
-from django.db.models import Q
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 # setup django environment
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'dojo.settings.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "dojo.settings.settings")
 django.setup()
 
-from dojo.models import Finding  # noqa: E402
 from dojo.filters import ApiFindingFilter  # noqa: E402
+from dojo.models import Finding  # noqa: E402
 
 app = FastAPI(title="DefectDojo MCP")
+
+
+class InitResponse(BaseModel):
+    name: str
+    description: str
+    version: str
+    endpoints: list[str]
 
 class FindingOut(BaseModel):
     id: int
@@ -19,11 +26,33 @@ class FindingOut(BaseModel):
     severity: str
     url: str | None
 
+
 class SLAOut(BaseModel):
     id: int
     title: str
     sla_expiration_date: str | None
 
+
+@app.get("/")
+def root():
+    """Health check endpoint for Copilot."""
+    return {"status": "ok"}
+
+
+@app.post("/initialize", response_model=InitResponse)
+def initialize():
+    """Return basic metadata so Copilot can connect."""
+    return InitResponse(
+        name="DefectDojo MCP",
+        description="Query findings from DefectDojo",
+        version="1.0",
+        endpoints=[
+            "/findings",
+            "/findings/{severity}",
+            "/risk-accepted",
+            "/critical-sla",
+        ],
+    )
 
 @app.get("/findings", response_model=list[FindingOut])
 def list_findings(request: Request):
@@ -35,6 +64,7 @@ def list_findings(request: Request):
         FindingOut(id=fi.id, title=fi.title, severity=fi.severity, url=fi.file_path)
         for fi in f.qs
     ]
+
 
 @app.get("/findings/{severity}", response_model=list[FindingOut])
 def findings_by_severity(severity: str, request: Request):
@@ -48,16 +78,24 @@ def findings_by_severity(severity: str, request: Request):
         for fi in f.qs
     ]
 
+
 @app.get("/risk-accepted", response_model=list[FindingOut])
 def list_risk_accepted():
     qs = Finding.objects.filter(risk_accepted=True)
     return [FindingOut(id=f.id, title=f.title, severity=f.severity, url=f.file_path) for f in qs]
 
+
 @app.get("/critical-sla", response_model=list[SLAOut])
 def critical_sla():
     qs = Finding.objects.filter(severity="Critical")
-    items = []
-    for f in qs:
-        items.append(SLAOut(id=f.id, title=f.title, sla_expiration_date=f.sla_expiration_date.isoformat() if f.sla_expiration_date else None))
-    return items
+    return [
+        SLAOut(
+            id=f.id,
+            title=f.title,
+            sla_expiration_date=f.sla_expiration_date.isoformat()
+            if f.sla_expiration_date
+            else None,
+        )
+        for f in qs
+    ]
 

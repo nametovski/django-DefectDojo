@@ -97,10 +97,14 @@ Navigate to `http://localhost:8080` to see your new instance!
 DefectDojo ships with a small MCP server to allow Copilot agents to query data. Start it with:
 
 ```bash
-uvicorn mcp_server:app
+
+uvicorn mcp_server:app --host 0.0.0.0 --port 8000
 ```
 
 Available endpoints:
+- `/` simple health check.
+- `/initialize` used by Copilot to handshake with the MCP server.
+
 - `/findings` uses DefectDojo's filters. Example: `/findings?severity=High&active=True`.
 - `/findings/{severity}` list findings filtered by severity.
 - `/risk-accepted` list items that are risk accepted.
@@ -117,7 +121,10 @@ Available endpoints:
        }
    }
    ```
-3. Start the MCP server with `uvicorn mcp_server:app` and use `@dojo` in Copilot Chat to query findings.
+
+3. Start the MCP server with `uvicorn mcp_server:app --host 0.0.0.0 --port 8000` and use `@dojo` in Copilot Chat to query findings.
+4. The Copilot agent will POST to `/initialize` when connecting. Ensure the endpoint is reachable.
+
 
 ## Community, Getting Involved, and Updates
 
