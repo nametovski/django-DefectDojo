@@ -1,17 +1,16 @@
 # ruff: noqa: N999
 import multiselectfield.db.fields
-from django.contrib.auth.models import Group
 from django.db import migrations, models
 
 
 def create_risk_approvers(apps, schema_editor):
-    Group.objects.get_or_create(name="Risk-Approvers")
+    Dojo_Group = apps.get_model("dojo", "Dojo_Group")
+    Dojo_Group.objects.get_or_create(name="Risk-Approvers")
 
 
 class Migration(migrations.Migration):
     dependencies = [
         ("dojo", "0237_alter_risk_acceptance_approved"),
-        ("auth", "0012_alter_user_first_name_max_length"),
     ]
 
     operations = [
@@ -33,3 +32,4 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(create_risk_approvers, migrations.RunPython.noop),
     ]
+    

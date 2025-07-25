@@ -3032,6 +3032,8 @@ class Finding(models.Model):
             status += ["Duplicate"]
         if self.risk_accepted:
             status += ["Risk Accepted"]
+        elif self.risk_acceptance_set.filter(approved=False).exists():
+            status += ["Risk Acceptance Pending"]
         if not len(status):
             status += ["Initial"]
 

@@ -78,6 +78,7 @@ from dojo.models import (
     Cred_Mapping,
     Development_Environment,
     Dojo_Group,
+    Dojo_Group_Member,
     Dojo_User,
     Endpoint,
     Engagement,
@@ -1239,11 +1240,11 @@ def add_risk_acceptance(request, eid, fid=None):
 
             findings = form.cleaned_data["accepted_findings"]
 
-            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
+            ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
 
             approvers = Dojo_Group.objects.filter(name="Risk-Approvers").first()
             if approvers:
-                recipients = [m.user.username for m in approvers.dojogroup_member_set.all()]
+                recipients = [m.user.username for m in approvers.dojo_group_member_set.all()]
                 create_notification(
                     event="risk_acceptance_request",
                     title=f"Risk acceptance '{risk_acceptance.name}' awaiting approval",
@@ -1482,7 +1483,7 @@ def approve_risk_acceptance(request, eid, raid):
     risk_acceptance = get_object_or_404(Risk_Acceptance, pk=raid)
     eng = get_object_or_404(Engagement, pk=eid)
 
-    if not request.user.groups.filter(name="Risk-Approvers").exists():
+    if not Dojo_Group_Member.objects.filter(group__name="Risk-Approvers", user=request.user).exists():
         raise PermissionDenied
 
     form = ApproveRiskAcceptanceForm(request.POST or None, instance=risk_acceptance)
