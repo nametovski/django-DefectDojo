@@ -2838,6 +2838,9 @@ class NotificationsSerializer(serializers.ModelSerializer):
     risk_acceptance_expiration = MultipleChoiceField(
         choices=NOTIFICATION_CHOICES, default=DEFAULT_NOTIFICATION,
     )
+    risk_acceptance_request = MultipleChoiceField(
+        choices=NOTIFICATION_CHOICES, default=DEFAULT_NOTIFICATION,
+    )
     template = serializers.BooleanField(default=False)
 
     class Meta:
