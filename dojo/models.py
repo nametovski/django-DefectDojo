@@ -3032,6 +3032,8 @@ class Finding(models.Model):
             status += ["Duplicate"]
         if self.risk_accepted:
             status += ["Risk Accepted"]
+        elif self.risk_acceptance_set.filter(approved=False).exists():
+            status += ["Risk Acceptance Pending"]
         if not len(status):
             status += ["Initial"]
 
@@ -3722,6 +3724,7 @@ class Risk_Acceptance(models.Model):
     expiration_date_handled = models.DateTimeField(default=None, null=True, blank=True, help_text=_("(readonly) When the risk acceptance expiration was handled (manually or by the daily job)."))
     reactivate_expired = models.BooleanField(null=False, blank=False, default=True, verbose_name=_("Reactivate findings on expiration"), help_text=_("Reactivate findings when risk acceptance expires?"))
     restart_sla_expired = models.BooleanField(default=False, null=False, verbose_name=_("Restart SLA on expiration"), help_text=_("When enabled, the SLA for findings is restarted when the risk acceptance expires."))
+    permanent = models.BooleanField(default=False, help_text=_("Indicates this risk acceptance does not expire."))
 
     notes = models.ManyToManyField(Notes, editable=False)
     created = models.DateTimeField(auto_now_add=True, null=False)
@@ -4118,6 +4121,9 @@ class Notifications(models.Model):
     risk_acceptance_expiration = MultiSelectField(choices=NOTIFICATION_CHOICES, default=DEFAULT_NOTIFICATION, blank=True,
         verbose_name=_("Risk Acceptance Expiration"),
         help_text=_("Get notified of (upcoming) Risk Acceptance expiries"))
+    risk_acceptance_request = MultiSelectField(choices=NOTIFICATION_CHOICES, default=DEFAULT_NOTIFICATION, blank=True,
+        verbose_name=_("Risk Acceptance Requests"),
+        help_text=_("Get notified when a Risk Acceptance requires approval"))
     sla_breach_combined = MultiSelectField(choices=NOTIFICATION_CHOICES, default=DEFAULT_NOTIFICATION, blank=True,
         verbose_name=_("SLA breach (combined)"),
         help_text=_("Get notified of (upcoming) SLA breaches (a message per project)"))
@@ -4162,6 +4168,7 @@ class Notifications(models.Model):
                 result.sla_breach = {*result.sla_breach, *notifications.sla_breach}
                 result.sla_breach_combined = {*result.sla_breach_combined, *notifications.sla_breach_combined}
                 result.risk_acceptance_expiration = {*result.risk_acceptance_expiration, *notifications.risk_acceptance_expiration}
+                result.risk_acceptance_request = {*result.risk_acceptance_request, *notifications.risk_acceptance_request}
         return result
 
 

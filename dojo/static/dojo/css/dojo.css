@@ -506,6 +506,21 @@ div.danger-zone p {
     margin-top: 10px;
 }
 
+div.pending-approval {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #f0ad4e;
+    background-color: #fcf8e3;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+div.pending-approval i {
+    color: #f0ad4e;
+    margin-right: 8px;
+}
+
 .meta_profile {
     -moz-border-radius: 4px;
     -webkit-border-radius: 4px;

@@ -13,6 +13,7 @@ from time import strftime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.utils import NestedObjects
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import DEFAULT_DB_ALIAS
@@ -21,7 +22,6 @@ from django.db.models.functions import Coalesce
 from django.db.models.query import Prefetch, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.contrib.auth.decorators import login_required
 from django.urls import Resolver404, reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -53,6 +53,7 @@ from dojo.finding.helper import NOT_ACCEPTED_FINDINGS_QUERY
 from dojo.finding.views import find_available_notetypes
 from dojo.forms import (
     AddFindingsRiskAcceptanceForm,
+    ApproveRiskAcceptanceForm,
     CheckForm,
     CredMappingForm,
     DeleteEngagementForm,
@@ -76,6 +77,8 @@ from dojo.models import (
     Check_List,
     Cred_Mapping,
     Development_Environment,
+    Dojo_Group,
+    Dojo_Group_Member,
     Dojo_User,
     Endpoint,
     Engagement,
@@ -1237,7 +1240,20 @@ def add_risk_acceptance(request, eid, fid=None):
 
             findings = form.cleaned_data["accepted_findings"]
 
-            risk_acceptance = ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
+            ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, findings, apply=False)
+
+            approvers = Dojo_Group.objects.filter(name="Risk-Approvers").first()
+            if approvers:
+                recipients = [m.user.username for m in approvers.dojo_group_member_set.all()]
+                create_notification(
+                    event="risk_acceptance_request",
+                    title=f"Risk acceptance '{risk_acceptance.name}' awaiting approval",
+                    risk_acceptance=risk_acceptance,
+                    engagement=eng,
+                    product=eng.product,
+                    recipients=recipients,
+                    url=reverse("view_risk_acceptance", args=(eid, risk_acceptance.id)),
+                )
 
             messages.add_message(
                 request,
@@ -1462,28 +1478,46 @@ def reinstate_risk_acceptance(request, eid, raid):
     return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
 
 
-@user_is_authorized(Engagement, Permissions.Risk_Acceptance, "eid")
+@login_required
 def approve_risk_acceptance(request, eid, raid):
+    """Allow members of the ``Risk-Approvers`` Dojo group to approve requests."""
     risk_acceptance = get_object_or_404(Risk_Acceptance, pk=raid)
     eng = get_object_or_404(Engagement, pk=eid)
-    if request.user != risk_acceptance.owner:
+
+    if not Dojo_Group_Member.objects.filter(group__name="Risk-Approvers", user=request.user).exists():
         raise PermissionDenied
-    if not risk_acceptance.approved:
-        ra_helper.add_findings_to_risk_acceptance(request.user, risk_acceptance, risk_acceptance.accepted_findings.all(), apply=True)
-        risk_acceptance.approved = True
-        risk_acceptance.save()
-        messages.add_message(
-            request,
-            messages.SUCCESS,
-            "Risk acceptance approved.",
-            extra_tags="alert-success",
+
+    form = ApproveRiskAcceptanceForm(request.POST or None, instance=risk_acceptance)
+    if request.method == "POST" and form.is_valid() and not risk_acceptance.approved:
+        ra_helper.add_findings_to_risk_acceptance(
+            request.user,
+            risk_acceptance,
+            risk_acceptance.accepted_findings.all(),
+            apply=True,
         )
-    return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
+        ra = form.save(commit=False)
+        ra.approved = True
+        ra.accepted_by = Dojo_User.generate_full_name(request.user)
+        ra.save()
+        messages.add_message(request, messages.SUCCESS, "Risk acceptance approved.", extra_tags="alert-success")
+        return redirect_to_return_url_or_else(request, reverse("view_risk_acceptance", args=(eid, raid)))
+
+    product_tab = Product_Tab(eng.product, title="Risk Acceptance", tab="engagements")
+    product_tab.setEngagement(eng)
+    return render(
+        request,
+        "dojo/approve_risk_acceptance.html",
+        {"form": form, "risk_acceptance": risk_acceptance, "eng": eng, "product_tab": product_tab},
+    )
 
 
 @login_required
 def pending_risk_acceptances(request):
-    ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
+    """List risk acceptances awaiting approval."""
+    if Dojo_Group_Member.objects.filter(group__name="Risk-Approvers", user=request.user).exists():
+        ras = Risk_Acceptance.objects.filter(approved=False).select_related("engagement")
+    else:
+        ras = Risk_Acceptance.objects.filter(owner=request.user, approved=False)
     return render(request, "dojo/pending_risk_acceptances.html", {"risk_acceptances": ras})
 
 
